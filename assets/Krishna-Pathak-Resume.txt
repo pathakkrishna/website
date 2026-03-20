@@ -1,0 +1,28 @@
+Krishna Pathak
+Data Scientist / CSE Student
+
+Location: Punjab, India
+University: Lovely Professional University, Punjab
+Degree: B.Tech - Computer Science & Engineering
+CGPA: 6.7
+
+Focus Areas:
+- Data analytics
+- Business intelligence
+- Dashboard design
+- End-to-end data solutions
+
+Key Skills:
+- Python
+- Java
+- Power BI
+- MySQL
+- MS Excel
+- Power Query
+- Git / GitHub
+
+GitHub:
+https://github.com/pathakkrishna
+
+LinkedIn:
+https://www.linkedin.com/in/krishnapathk

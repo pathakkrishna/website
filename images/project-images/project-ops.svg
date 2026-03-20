@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000">
+  <rect width="1600" height="1000" fill="#08111f"/>
+  <rect x="110" y="90" width="1380" height="820" rx="40" fill="#0f1f37" stroke="#26425f" stroke-width="4"/>
+  <rect x="170" y="140" width="1260" height="80" rx="18" fill="#152b48"/>
+  <rect x="170" y="270" width="400" height="560" rx="28" fill="#10233e"/>
+  <rect x="610" y="270" width="820" height="560" rx="28" fill="#112742"/>
+  <path d="M710 500 L860 410 L1020 560 L1200 360 L1340 520" fill="none" stroke="#83c5ff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="860" cy="410" r="18" fill="#5eead4"/>
+  <circle cx="1200" cy="360" r="18" fill="#5eead4"/>
+  <text x="180" y="200" fill="#e2e8f0" font-family="Inter, sans-serif" font-size="46" font-weight="700">Ops Command Center</text>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000">
+  <rect width="1600" height="1000" fill="#06101f"/>
+  <circle cx="220" cy="180" r="200" fill="#83c5ff" opacity="0.16"/>
+  <circle cx="1360" cy="760" r="280" fill="#5eead4" opacity="0.12"/>
+  <text x="180" y="220" fill="#f8fafc" font-family="Cormorant Garamond, serif" font-size="88">Immersive Hero Layout</text>
+  <rect x="180" y="300" width="1240" height="520" rx="34" fill="#0d1d34" stroke="#2a466f" stroke-width="4"/>
+  <rect x="240" y="380" width="420" height="300" rx="24" fill="#10233e"/>
+  <rect x="720" y="380" width="640" height="180" rx="24" fill="#132640"/>
+  <rect x="720" y="590" width="300" height="90" rx="45" fill="#83c5ff" opacity="0.75"/>
+  <rect x="1040" y="590" width="240" height="90" rx="45" fill="#5eead4" opacity="0.7"/>
+</svg>

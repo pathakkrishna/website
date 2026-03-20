@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000">
+  <rect width="1600" height="1000" fill="#091426"/>
+  <circle cx="260" cy="220" r="200" fill="#83c5ff" opacity="0.16"/>
+  <rect x="120" y="90" width="1360" height="820" rx="40" fill="#10233e" stroke="#27405f" stroke-width="4"/>
+  <text x="180" y="200" fill="#f8fafc" font-family="Inter, sans-serif" font-size="48" font-weight="700">Learning Path Platform</text>
+  <rect x="180" y="260" width="520" height="540" rx="30" fill="#112742"/>
+  <rect x="760" y="260" width="660" height="180" rx="28" fill="#132640"/>
+  <rect x="760" y="470" width="300" height="330" rx="28" fill="#122846"/>
+  <rect x="1120" y="470" width="300" height="330" rx="28" fill="#122846"/>
+</svg>

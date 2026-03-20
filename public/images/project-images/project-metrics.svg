@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000">
+  <rect width="1600" height="1000" fill="#08111f"/>
+  <rect x="120" y="100" width="1360" height="800" rx="40" fill="#10233e" stroke="#2a456e" stroke-width="4"/>
+  <text x="180" y="190" fill="#e2e8f0" font-family="Inter, sans-serif" font-size="48" font-weight="700">Developer Metrics Board</text>
+  <rect x="180" y="250" width="260" height="160" rx="26" fill="#122846"/>
+  <rect x="470" y="250" width="260" height="160" rx="26" fill="#122846"/>
+  <rect x="760" y="250" width="260" height="160" rx="26" fill="#122846"/>
+  <rect x="1050" y="250" width="320" height="160" rx="26" fill="#122846"/>
+  <rect x="180" y="460" width="560" height="340" rx="28" fill="#112742"/>
+  <rect x="780" y="460" width="590" height="340" rx="28" fill="#112742"/>
+  <path d="M860 700 C940 540 1040 760 1160 600 S1300 540 1350 450" fill="none" stroke="#83c5ff" stroke-width="16" stroke-linecap="round"/>
+</svg>

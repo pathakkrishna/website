@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1100" fill="none">
+  <rect width="900" height="1100" rx="56" fill="#0B0B0B"/>
+  <rect x="40" y="40" width="820" height="1020" rx="42" fill="#121212" stroke="rgba(255,255,255,0.08)"/>
+  <circle cx="450" cy="360" r="170" fill="#1E1E1E"/>
+  <path d="M210 860c28-154 138-252 240-252s212 98 240 252" fill="#1A1A1A"/>
+  <circle cx="450" cy="360" r="128" fill="#242424"/>
+  <path d="M290 860c18-112 90-184 160-184s142 72 160 184" fill="#262626"/>
+  <text x="450" y="980" fill="#F2F2F2" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="600" text-anchor="middle">KP</text>
+</svg>

@@ -38,53 +38,54 @@ export const techSkillsWithLogos = [
 export const projects = [
   {
     title: "Retail & Warehouse Sales Dashboard",
-    subtitle: "Interactive Power BI analytics dashboard",
-    image: "/images/project-images/project-dashboard.svg",
     tech: ["Power BI", "Power Query", "DAX", "Data Modeling"],
-    description: "Interactive Power BI dashboard analyzing warehouse and retail sales performance across regions with KPI tracking and dynamic filtering.",
-    github: "https://github.com/pathakkrishna",
-    features: [
-      "KPI tracking for sales performance",
-      "Dynamic regional and product filtering",
-      "Power Query and DAX based business reporting"
+    github: "https://github.com/pathakkrishna/PowerBi--project",
+    image: "/images/project-images/retail-dash-ai.png",
+    longDescription: [
+      "Designed and developed a comprehensive analytics dashboard to monitor sales performance across multiple warehouse and retail channels.",
+      "Conducted extensive data modeling and wrote complex DAX measures to enable dynamic KPI tracking and real-time metric analysis.",
+      "Utilized Power Query to clean, transform, and integrate raw data imports, resulting in an interactive reporting system that quickly identifies regional trends and bottlenecks."
     ],
-    gallery: [
-      "/images/project-images/project-dashboard-screen-1.svg",
-      "/images/project-images/project-dashboard-screen-2.svg"
+    extraTech: ["SQL", "Excel", "Data Transformation", "Visualization"],
+    sliders: [
+      "/images/project-images/retail-dashboard.png",
+      "/images/project-images/retail-data.png",
+      "/images/project-images/retail-model.png"
     ]
   },
   {
     title: "Library Book Tracker",
-    subtitle: "Console-based library management system",
-    image: "/images/project-images/project-learning.svg",
     tech: ["Java", "ArrayList", "OOP"],
-    description: "Console-based library management system enabling efficient book record operations including add, delete, search, and display.",
-    github: "https://github.com/pathakkrishna",
-    features: [
-      "Book add, delete, search, and display operations",
-      "ArrayList-based record storage",
-      "Clean OOP structure for console workflows"
+    github: "https://github.com/pathakkrishna/Library-Book-Tracker-using-Java",
+    image: "/images/project-images/library-tracker-ai.png",
+    longDescription: [
+      "Engineered a scalable, command-line based library management application utilizing pure Java.",
+      "Leveraged object-oriented programming principles and versatile data structures like ArrayLists to efficiently store, retrieve, update, and manage book records.",
+      "Implemented robust user input validation and dynamic search algorithms (by ID or title), ensuring structured and maintainable codebase logic."
     ],
-    gallery: [
-      "/images/project-images/project-learning-screen-1.svg",
-      "/images/project-images/project-learning-screen-2.svg"
+    extraTech: ["CLI", "Data Structures", "Input Validation", "Scanners"],
+    sliders: [
+      "/images/project-images/library-cli-1.png",
+      "/images/project-images/library-cli-2.png",
+      "/images/project-images/library-cli-3.png"
     ]
   },
   {
     title: "COVID-19 Data Analysis Dashboard",
-    subtitle: "Python analysis and Excel KPI dashboard",
-    image: "/images/project-images/project-metrics.svg",
     tech: ["Python", "Pandas", "NumPy", "Matplotlib", "Seaborn", "Excel"],
-    description: "Analyzed 100K+ COVID-19 records using Python and built an Excel dashboard with KPIs and pivot tables to visualize trends.",
-    github: "https://github.com/pathakkrishna",
-    features: [
-      "100K+ record analysis workflow",
-      "Trend visualization with Python libraries",
-      "Excel KPI and pivot-table reporting"
+    github: "https://github.com/pathakkrishna/Excel-Project",
+    image: "/images/project-images/covid-main-hero.png",
+    longDescription: [
+      "Built an end-to-end data analysis pipeline to evaluate and process over 100,000 COVID-19 records.",
+      "Performed rigorous data cleaning and exploratory data analysis using powerful Python libraries including Pandas and NumPy.",
+      "Created comprehensive statistical visualizations using Matplotlib and Seaborn, and integrated findings into a final Excel dashboard featuring pivot tables for clear, actionable health insights."
     ],
-    gallery: [
-      "/images/project-images/project-metrics-screen-1.svg",
-      "/images/project-images/project-metrics-screen-2.svg"
+    extraTech: ["Data Cleaning", "Jupyter Notebook", "Exploratory Analysis"],
+    sliders: [
+      "/images/project-images/covid-dashboard.png",
+      "/images/project-images/covid-code-1.png",
+      "/images/project-images/covid-code-2.png",
+      "/images/project-images/covid-code-3.png"
     ]
   }
 ];
@@ -93,6 +94,7 @@ export const certifications = [
   {
     title: "ChatGPT-4 Prompt Engineering",
     issuer: "Infosys",
+    logo: "/images/platforms/infosys.png",
     date: "Aug 2025",
     image: "/images/certificates/chatgpt-4 prompt cert.png",
     viewLink: "/images/certificates/chatgpt-4 prompt cert.png",
@@ -103,7 +105,8 @@ export const certifications = [
   {
     title: "Master Generative AI & Generative AI Tools",
     issuer: "Infosys Springboard",
-    date: "Aug 21, 2025",
+    logo: "/images/platforms/infosys.png",
+    date: "Aug 2025",
     image: "/images/certificates/Master Generative.png",
     viewLink: "/images/certificates/Master Generative.png",
     verifyLink: "https://verify.onwingspan.com",
@@ -113,6 +116,7 @@ export const certifications = [
   {
     title: "Java Programming",
     issuer: "NeoColab",
+    logo: "/images/platforms/lpu.png",
     date: "May 2025",
     image: "/images/certificates/Java.png",
     viewLink: "/images/certificates/Java.png",
@@ -123,6 +127,7 @@ export const certifications = [
   {
     title: "Object Oriented Programming",
     issuer: "NeoColab",
+    logo: "/images/platforms/lpu.png",
     date: "Dec 2025",
     image: "/images/certificates/OOPS.png",
     viewLink: "/images/certificates/OOPS.png",
@@ -133,6 +138,7 @@ export const certifications = [
   {
     title: "The English Master Course",
     issuer: "Udemy",
+    logo: "/images/platforms/udemy.png",
     date: "May 2024",
     image: "/images/certificates/english master.jpg",
     viewLink: "/images/certificates/english master.jpg",
@@ -142,8 +148,9 @@ export const certifications = [
   },
   {
     title: "Python Basics Certification",
-    issuer: "Python Course",
-    date: "2025",
+    issuer: "HackerRank",
+    logo: "/images/platforms/hackerrank.png",
+    date: "Feb 2026",
     image: "/images/certificates/python basics.png",
     viewLink: "/images/certificates/python basics.png",
     verifyLink: "https://www.hackerrank.com/certificates/iframe/b6202821629f",

@@ -88,6 +88,7 @@ function TechSphere() {
       const W = canvas.offsetWidth;
       const H = canvas.offsetHeight;
 
+      // Only resize if needed
       if (canvas.width !== Math.round(W * dpr) || canvas.height !== Math.round(H * dpr)) {
         canvas.width = Math.round(W * dpr);
         canvas.height = Math.round(H * dpr);
@@ -98,79 +99,89 @@ function TechSphere() {
       const cx = W / 2;
       const cy = H / 2;
 
-      // Auto-rotate
+      // Auto-rotate with smooth lerp
       if (!isDraggingRef.current) {
-        rotRef.current.angleY += 0.004;
-        rotRef.current.angleX += velRef.current.x * 0.92;
-        rotRef.current.angleY += velRef.current.y * 0.92;
-        velRef.current.x *= 0.88;
-        velRef.current.y *= 0.88;
+        rotRef.current.angleY += 0.0035;
+        rotRef.current.angleX += velRef.current.x * 0.94;
+        rotRef.current.angleY += velRef.current.y * 0.94;
+        velRef.current.x *= 0.92;
+        velRef.current.y *= 0.92;
       }
 
       const { angleX, angleY } = rotRef.current;
 
-      // Project all points
-      const projected = points.map((p) => {
+      // Single-pass projection & pre-calculation
+      const projected = [];
+      const pointsLen = points.length;
+      for (let i = 0; i < pointsLen; i++) {
+        const p = points[i];
         const { x, y, z } = rotatePoint(p.phi, p.theta, angleX, angleY);
         const { sx, sy, scale, depth } = project(x, y, z, cx, cy);
-        return { p, sx, sy, scale, depth };
-      });
+        projected.push({ p, sx, sy, scale, depth });
+      }
 
+      // Sort by depth (back to front)
       projected.sort((a, b) => a.depth - b.depth);
 
-      // Hit-test: find which logo the mouse is over
+      // Hit-test: find what the mouse is over (one loop instead of two)
       let hitItem = null;
       let hitSx = 0, hitSy = 0, hitSize = 0;
       let bestDist = Infinity;
 
+      const mouseOverSphere = mouseX !== -9999;
+      
+      // Draw in single final loop while checking hit on the fly
       for (const item of projected) {
-        const t = (item.depth + RADIUS) / (2 * RADIUS);
-        const size = (LOGO_SIZE * 0.5 + LOGO_SIZE * 0.5 * t) * item.scale * 1.8;
-        const hitR = size * 0.7;
-        const d = Math.hypot(mouseX - item.sx, mouseY - item.sy);
-        if (d < hitR && d < bestDist) {
-          bestDist = d;
-          hitItem = item.p;
-          hitSx = item.sx;
-          hitSy = item.sy;
-          hitSize = size;
+        const { p, sx, sy, scale, depth } = item;
+        const t = (depth + RADIUS) / (2 * RADIUS);
+        const alpha = 0.2 + t * 0.8;
+        const size = (LOGO_SIZE * 0.5 + LOGO_SIZE * 0.5 * t) * scale * 1.8;
+        
+        // Hit test for next frame info
+        if (mouseOverSphere) {
+          const hitR = size * 0.75;
+          const d = Math.hypot(mouseX - sx, mouseY - sy);
+          if (d < hitR && d < bestDist) {
+            bestDist = d;
+            hitItem = p;
+            hitSx = sx;
+            hitSy = sy;
+            hitSize = size;
+          }
+        }
+
+        const isHit = hitItem && hitItem.name === p.name;
+        ctx.globalAlpha = isHit ? 1 : alpha;
+
+        if (p.loaded && p.img) {
+          // Optimized: Only use complex gradients for the item the mouse is currently hitting
+          if (isHit) {
+            const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, size * 0.95);
+            grd.addColorStop(0, "rgba(100, 160, 255, 0.2)");
+            grd.addColorStop(1, "rgba(0, 0, 0, 0)");
+            ctx.fillStyle = grd;
+            ctx.beginPath();
+            ctx.arc(sx, sy, size * 0.95, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          const finalSize = isHit ? size * 1.15 : size;
+          ctx.drawImage(p.img, sx - finalSize / 2, sy - finalSize / 2, finalSize, finalSize);
+        } else {
+          ctx.beginPath();
+          ctx.arc(sx, sy, 4 * scale, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(180, 200, 255, ${alpha})`;
+          ctx.fill();
         }
       }
 
+      // Final UI state update
       if (hitItem) {
         showTooltip(hitItem.name, hitSx, hitSy, hitSize);
         canvas.style.cursor = "pointer";
       } else {
         hideTooltip();
         canvas.style.cursor = isDraggingRef.current ? "grabbing" : "grab";
-      }
-
-      // Draw
-      for (const { p, sx, sy, scale, depth } of projected) {
-        const t = (depth + RADIUS) / (2 * RADIUS);
-        const alpha = 0.25 + t * 0.75;
-        const size = (LOGO_SIZE * 0.5 + LOGO_SIZE * 0.5 * t) * scale * 1.8;
-        const isHit = hitItem && hitItem.name === p.name;
-
-        ctx.globalAlpha = isHit ? 1 : alpha;
-
-        if (p.loaded && p.img) {
-          const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, size * 0.9);
-          grd.addColorStop(0, `rgba(150,180,255,${isHit ? 0.22 : 0.06 * t})`);
-          grd.addColorStop(1, "rgba(0,0,0,0)");
-          ctx.beginPath();
-          ctx.arc(sx, sy, size * 0.9, 0, Math.PI * 2);
-          ctx.fillStyle = grd;
-          ctx.fill();
-
-          const drawSize = isHit ? size * 1.18 : size;
-          ctx.drawImage(p.img, sx - drawSize / 2, sy - drawSize / 2, drawSize, drawSize);
-        } else {
-          ctx.beginPath();
-          ctx.arc(sx, sy, 4 * scale, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(200,210,255,${alpha})`;
-          ctx.fill();
-        }
       }
 
       ctx.globalAlpha = 1;
@@ -273,13 +284,10 @@ function SplashScreen({ onComplete }) {
   }
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Enter") {
-        handleWelcome();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    const timer = setTimeout(() => {
+      handleWelcome();
+    }, 1400);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -355,9 +363,10 @@ function SplashScreen({ onComplete }) {
           d.spiralAngle  = d.angle;
           d.spiralRadius = d.radius;
         } else if (phase === "converging") {
-          // Slower spin + gentler shrink = smooth comet vortex
-          d.spiralAngle  += 0.07;
-          d.spiralRadius *= 0.975;
+          // Smooth transition: maintain original direction but spin faster
+          d.spiralAngle += d.speed * 5.5;
+          // Faster shrink for a quicker, cinematic vortex
+          d.spiralRadius *= 0.965;
           const p = get3D(d.spiralAngle, d.spiralRadius, d.incl, d.node);
           d.x = p.x; d.y = p.y; d.z = p.z;
 
@@ -412,7 +421,7 @@ function SplashScreen({ onComplete }) {
         exitCalledRef.current = true;
         phaseRef.current = "done";
         setExiting(true);
-        setTimeout(onComplete, 1300);
+        setTimeout(onComplete, 800);
       }
 
       requestAnimationFrame(draw);
@@ -432,19 +441,15 @@ function SplashScreen({ onComplete }) {
       <canvas ref={backCanvasRef}  className="splash-canvas splash-canvas--back"  />
       {/* Button layer */}
       <div className="splash-center">
-        <button
+        <div
           className={`splash-enter-btn${btnFading ? " splash-enter-btn--fade" : ""}`}
-          type="button"
-          onClick={handleWelcome}
-          aria-label="Enter portfolio"
         >
           {"WELCOME".split("").map((letter, i) => (
             <span key={i} className="splash-letter" style={{ animationDelay: `${0.8 + i * 0.12}s` }}>
               {letter}
             </span>
           ))}
-        </button>
-        <p className={`splash-hint${btnFading ? " splash-hint--fade" : ""}`}>click to enter</p>
+        </div>
       </div>
       {/* Front canvas — dots rendered IN FRONT OF the button (pointer-events:none so button still works) */}
       <canvas ref={frontCanvasRef} className="splash-canvas splash-canvas--front" />
@@ -453,62 +458,114 @@ function SplashScreen({ onComplete }) {
 }
 
 function ProjectModal({ project, onClose }) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isZoomed, setIsZoomed] = useState(false);
+
+  // Reset slide only when project changes
+  useEffect(() => {
+    if (project) setCurrentSlide(0);
+  }, [project]);
+
+  // Handle keys and overflow
   useEffect(() => {
     if (!project) return undefined;
 
     const onKeyDown = (event) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        if (isZoomed) setIsZoomed(false);
+        else onClose();
+      }
     };
 
+    const initialBodyOverflow = document.body.style.overflow;
+    const initialHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
     document.addEventListener("keydown", onKeyDown);
 
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = initialBodyOverflow;
+      document.documentElement.style.overflow = initialHtmlOverflow;
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [project, onClose]);
+  }, [project, onClose, isZoomed]);
 
   if (!project) return null;
 
+  const handleNextSlide = () => {
+    if (project.sliders) {
+      setCurrentSlide((prev) => (prev + 1) % project.sliders.length);
+    }
+  };
+
+  const handlePrevSlide = () => {
+    if (project.sliders) {
+      setCurrentSlide((prev) => (prev - 1 + project.sliders.length) % project.sliders.length);
+    }
+  };
+
   return (
-    <div className="project-modal" aria-hidden="false">
-      <button className="project-modal__backdrop" onClick={onClose} aria-label="Close project details" />
-      <div className="project-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <button className="project-modal__close" type="button" onClick={onClose} aria-label="Close project details">
-          &times;
-        </button>
-        <div className="project-modal__content">
-          <div className="modal-layout">
-            <div className="modal-hero">
-              <img src={project.image} alt={project.title} loading="lazy" />
-            </div>
-            <div className="modal-copy">
-              <h2 id="modal-title">{project.title}</h2>
-              <p>{project.description}</p>
-            </div>
-            <div className="modal-meta">
-              {project.tech.map((item) => <span className="project-tag" key={item}>{item}</span>)}
-            </div>
-            <ul className="modal-feature-list">
-              {project.features.map((feature) => <li key={feature}>{feature}</li>)}
-            </ul>
-            <div className="modal-actions">
-              <a className="button button--primary" href={project.github} target="_blank" rel="noreferrer">GitHub</a>
-            </div>
-            <div className="modal-gallery">
-              {project.gallery.map((image, index) => (
-                <figure className="macbook" key={image}>
-                  <div className="macbook__screen">
-                    <img src={image} alt={`${project.title} screenshot ${index + 1}`} loading="lazy" />
-                  </div>
-                </figure>
-              ))}
+    <>
+      <div className="project-modal" aria-hidden="false">
+        <button className="project-modal__backdrop" onClick={onClose} aria-label="Close project details" />
+        <div className="project-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <button className="project-modal__close" type="button" onClick={onClose} aria-label="Close project details">
+            &times;
+          </button>
+          <div className="project-modal__content">
+            <div className="modal-split">
+              {project.sliders && project.sliders.length > 0 && (
+                <div className="modal-slider" style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: "16px", overflow: "hidden", boxShadow: "var(--card-shadow-rest)", background: "rgba(0,0,0,0.2)" }}>
+                  <img src={project.sliders[currentSlide]} alt={`Slide ${currentSlide + 1}`} style={{ width: "100%", height: "100%", objectFit: "contain", cursor: "zoom-in" }} onClick={() => setIsZoomed(true)} loading="lazy" />
+                  
+                  {project.sliders.length > 1 && (
+                    <>
+                      <button type="button" onClick={handlePrevSlide} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "36px", height: "36px", display: "grid", placeItems: "center", border: "none", borderRadius: "50%", background: "rgba(0,0,0,0.5)", color: "#fff", cursor: "pointer", fontSize: "20px", zIndex: 1 }}>&#8249;</button>
+                      <button type="button" onClick={handleNextSlide} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", width: "36px", height: "36px", display: "grid", placeItems: "center", border: "none", borderRadius: "50%", background: "rgba(0,0,0,0.5)", color: "#fff", cursor: "pointer", fontSize: "20px", zIndex: 1 }}>&#8250;</button>
+                      
+                      <div style={{ position: "absolute", bottom: "16px", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "8px", zIndex: 1 }}>
+                        {project.sliders.map((_, index) => (
+                          <div key={index} style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: index === currentSlide ? "#fff" : "rgba(255,255,255,0.4)", transition: "background-color 0.2s ease" }} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+              
+              <div className="modal-split-text" style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                <div className="modal-copy">
+                  <ul style={{ fontSize: "15px", lineHeight: "1.75", color: "var(--text)", margin: "0", paddingLeft: "20px", display: "grid", gap: "10px" }}>
+                    {Array.isArray(project.longDescription) 
+                      ? project.longDescription.map((bullet, index) => <li key={index}>{bullet}</li>) 
+                      : <li>{project.longDescription}</li>}
+                  </ul>
+                </div>
+                
+                <div className="modal-meta" style={{ marginTop: "24px" }}>
+                  {project.extraTech && project.extraTech.map((item) => <span className="project-tag" key={item}>{item}</span>)}
+                </div>
+                
+                <div className="modal-actions" style={{ justifyContent: "flex-start", marginTop: "32px" }}>
+                  <a className="button button--primary" href={project.github} target="_blank" rel="noreferrer">GitHub Repository</a>
+                </div>
+              </div>
+              
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {isZoomed && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out" }} onClick={() => setIsZoomed(false)}>
+          <button style={{ position: "absolute", top: "32px", right: "32px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", width: "44px", height: "44px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s" }} onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+          <img src={project.sliders[currentSlide]} alt="Full view" style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain", borderRadius: "8px", boxShadow: "0 20px 60px rgba(0,0,0,0.8)" }} />
+        </div>
+      )}
+    </>
   );
 }
 
@@ -522,8 +579,11 @@ export default function App() {
   const [techCanScrollRight, setTechCanScrollRight] = useState(true);
   const [projectCanScrollLeft, setProjectCanScrollLeft] = useState(false);
   const [projectCanScrollRight, setProjectCanScrollRight] = useState(true);
+  const [certCanScrollLeft, setCertCanScrollLeft] = useState(false);
+  const [certCanScrollRight, setCertCanScrollRight] = useState(true);
   const techSliderRef = useRef(null);
   const projectSliderRef = useRef(null);
+  const certSliderRef = useRef(null);
 
   const handleSplashComplete = () => {
     setSplashDone(true);
@@ -555,7 +615,7 @@ export default function App() {
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.18 });
+    }, { threshold: 0.1 });
 
     nodes.forEach((node) => observer.observe(node));
     return () => observer.disconnect();
@@ -611,6 +671,28 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const slider = certSliderRef.current;
+    if (!slider) return undefined;
+
+    const updateCertButtons = () => {
+      const maxScroll = slider.scrollWidth - slider.clientWidth;
+      setCertCanScrollLeft(slider.scrollLeft > 2);
+      setCertCanScrollRight(slider.scrollLeft < maxScroll - 2);
+    };
+
+    updateCertButtons();
+    slider.addEventListener("scroll", updateCertButtons, { passive: true });
+
+    const resizeObserver = new ResizeObserver(updateCertButtons);
+    resizeObserver.observe(slider);
+
+    return () => {
+      slider.removeEventListener("scroll", updateCertButtons);
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     let resizeTimer;
     const handleResize = () => {
       document.body.classList.add("resize-animation-stopper");
@@ -650,6 +732,19 @@ export default function App() {
     const item = slider.firstElementChild;
     const gap = Number.parseFloat(getComputedStyle(slider).gap || "0");
     const step = item ? item.getBoundingClientRect().width + gap : slider.clientWidth;
+
+    slider.scrollBy({
+      left: direction * step,
+      behavior: "smooth"
+    });
+  };
+
+  const handleCertArrow = (direction) => {
+    const slider = certSliderRef.current;
+    if (!slider) return;
+
+    // Use full width of container to jump completely to next block
+    const step = slider.clientWidth;
 
     slider.scrollBy({
       left: direction * step,
@@ -712,9 +807,9 @@ export default function App() {
           <section className="hero section" id="hero">
             <article className="hero-card reveal">
               <h1 className="hero-sequence hero-sequence--1">Krishna Pathak</h1>
-              <p className="hero-role hero-sequence hero-sequence--2">DATA SCIENTIST / CSE STUDENT</p>
+              <p className="hero-role hero-sequence hero-sequence--2">Aspiring Data Scientist</p>
               <p className="hero__lead hero-sequence hero-sequence--3">
-                Turning raw data into actionable insights. Passionate about data analytics, business intelligence, and building end-to-end data solutions.
+                Turning data into clarity. Focused on analytics, business intelligence, and seamless end-to-end data experiences.
               </p>
               <div className="hero__actions hero-sequence hero-sequence--4">
                 {/* Social icon links */}
@@ -765,14 +860,13 @@ export default function App() {
               </figure>
               <article className="about-copy content-card reveal pop-reveal" style={{ "--pop-delay": "0.08s" }}>
                 <p>
-                  I am a Computer Science and Engineering student focused on data analytics, business intelligence, and end-to-end reporting workflows.
-                  I enjoy working with structured datasets, dashboard design, and turning complex metrics into clear decisions for teams.
+                  I am a Computer Science and Engineering student focused on data analytics and business intelligence, with a strong inclination toward building end-to-end reporting systems. Experienced in working with structured data, crafting intuitive dashboards, and turning complex metrics into insights that are clear, actionable, and decision-driven.
                 </p>
                 <p>
-                  My goal is to contribute in Data Scientist and Analyst roles where strong analytical thinking, clean execution, and practical business understanding matter.
+                  Brings a balance of analytical depth and practical business understanding, with an emphasis on clean execution and real-world impact. Rather than just analyzing data, the focus is on delivering solutions that simplify complexity and enable smarter decisions.
                 </p>
                 <p>
-                  I’m especially interested in building data products that combine analysis, reporting, and business context into interfaces that feel simple, useful, and decision-ready.
+                  Interested in developing data products that seamlessly combine analytics, reporting, and user experience—creating interfaces that feel intuitive, scalable, and genuinely useful.
                 </p>
               </article>
             </div>
@@ -788,9 +882,6 @@ export default function App() {
           <section className="projects section" id="projects">
             <SectionHeading eyebrow="Projects" title="Featured Work" />
             <div className="project-showcase reveal">
-              <div className="slider-header">
-                <p>Project showcase</p>
-              </div>
               <div className="project-slider" ref={projectSliderRef} tabIndex="0" aria-label="Project slider">
                 {projects.map((project, index) => (
                   <article
@@ -798,7 +889,7 @@ export default function App() {
                     key={project.title}
                     style={{ "--pop-delay": `${index * 0.08}s` }}
                   >
-                    <div className="project-card__media">
+                    <div className="project-card__media" style={{ width: "85%", margin: "0 auto 16px auto" }}>
                       <img src={project.image} alt={project.title} loading="lazy" />
                     </div>
                     <div className="project-card__body">
@@ -806,8 +897,18 @@ export default function App() {
                       <div className="project-card__tags">
                         {project.tech.map((item) => <span className="project-tag" key={item}>{item}</span>)}
                       </div>
+                      <div style={{ marginTop: "18px" }}>
+                        <a className="button button--primary" href={project.github} target="_blank" rel="noreferrer" style={{ minHeight: "36px", fontSize: "14px", padding: "0 16px" }}>
+                          GitHub
+                        </a>
+                      </div>
                     </div>
-                    <button className="project-card__plus" type="button" onClick={() => setSelectedProject(project)} aria-label={`Open details for ${project.title}`}>+</button>
+                    <button className="project-card__plus" type="button" onClick={() => setSelectedProject(project)} aria-label={`Open details for ${project.title}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                      </svg>
+                    </button>
                   </article>
                 ))}
               </div>
@@ -862,47 +963,54 @@ export default function App() {
 
           <section className="education section" id="education">
             <SectionHeading eyebrow="Education" title="Academic background." />
-            <div className="education-grid">
-              <article className="timeline-card edu-card reveal pop-reveal" style={{ "--pop-delay": "0s" }}>
-                <div className="edu-card__top">
-                  <div className="edu-card__title-wrap">
-                    <span className="edu-icon" aria-hidden="true">🎓</span>
+            <div className="edu-timeline">
+              <article className="edu-timeline-item reveal pop-reveal" style={{ "--pop-delay": "0s" }}>
+                <div className="edu-timeline-marker">
+                  <span className="edu-icon" aria-hidden="true">🎓</span>
+                </div>
+                <div className="edu-timeline-content">
+                  <div className="edu-timeline-header">
                     <h3 className="edu-school">Lovely Professional University</h3>
+                    <span className="current-badge">Current</span>
                   </div>
-                  <span className="current-badge">Current</span>
-                </div>
-                <div className="edu-divider" aria-hidden="true"></div>
-                <p className="edu-degree">B.Tech - Computer Science &amp; Engineering</p>
-                <p className="edu-detail"><strong>CGPA:</strong> 6.7</p>
-                <div className="edu-meta">
-                  <span>Aug 2023 - Present</span>
-                  <span>Punjab, India</span>
+                  <p className="edu-degree">B.Tech - Computer Science &amp; Engineering</p>
+                  <p className="edu-detail"><strong>CGPA:</strong> 6.7</p>
+                  <div className="edu-meta">
+                    <span>Aug 2023 - Present</span>
+                    <span>Punjab, India</span>
+                  </div>
                 </div>
               </article>
-              <article className="timeline-card edu-card reveal pop-reveal" style={{ "--pop-delay": "0.08s" }}>
-                <div className="edu-card__title-wrap">
+              <article className="edu-timeline-item reveal pop-reveal" style={{ "--pop-delay": "0.15s" }}>
+                <div className="edu-timeline-marker">
                   <span className="edu-icon" aria-hidden="true">📘</span>
-                  <h3 className="edu-school">St. Francis Inter College</h3>
                 </div>
-                <div className="edu-divider" aria-hidden="true"></div>
-                <p className="edu-degree">Intermediate</p>
-                <p className="edu-detail"><strong>Score:</strong> 62%</p>
-                <div className="edu-meta">
-                  <span>2022 - 2023</span>
-                  <span>Hathras, U.P.</span>
+                <div className="edu-timeline-content">
+                  <div className="edu-timeline-header">
+                    <h3 className="edu-school">St. Francis Inter College</h3>
+                  </div>
+                  <p className="edu-degree">Intermediate</p>
+                  <p className="edu-detail"><strong>Score:</strong> 62%</p>
+                  <div className="edu-meta">
+                    <span>2022 - 2023</span>
+                    <span>Hathras, U.P.</span>
+                  </div>
                 </div>
               </article>
-              <article className="timeline-card edu-card reveal pop-reveal" style={{ "--pop-delay": "0.16s" }}>
-                <div className="edu-card__title-wrap">
+              <article className="edu-timeline-item reveal pop-reveal" style={{ "--pop-delay": "0.3s" }}>
+                <div className="edu-timeline-marker">
                   <span className="edu-icon" aria-hidden="true">📗</span>
-                  <h3 className="edu-school">St. Francis Inter College</h3>
                 </div>
-                <div className="edu-divider" aria-hidden="true"></div>
-                <p className="edu-degree">Matriculation</p>
-                <p className="edu-detail"><strong>Score:</strong> 84%</p>
-                <div className="edu-meta">
-                  <span>2020 - 2021</span>
-                  <span>Hathras, U.P.</span>
+                <div className="edu-timeline-content">
+                  <div className="edu-timeline-header">
+                    <h3 className="edu-school">St. Francis Inter College</h3>
+                  </div>
+                  <p className="edu-degree">Matriculation</p>
+                  <p className="edu-detail"><strong>Score:</strong> 84%</p>
+                  <div className="edu-meta">
+                    <span>2020 - 2021</span>
+                    <span>Hathras, U.P.</span>
+                  </div>
                 </div>
               </article>
             </div>
@@ -910,28 +1018,41 @@ export default function App() {
 
           <section className="certifications section" id="certifications">
             <SectionHeading eyebrow="Certifications" title="Professional certifications across analytics and programming." />
-            <div className="certification-grid">
-              {certifications.map((item, index) => (
-                <article
-                  className="timeline-card certification-card interactive-lift reveal pop-reveal"
-                  key={item.title}
-                  style={{ "--pop-delay": `${index * 0.08}s` }}
-                >
-                  <div className="certification-card__meta">
-                    <div className="certification-card__issuer-wrap">
-                      <img className="certification-logo" src={issuerLogos[item.issuer]} alt="" aria-hidden="true" loading="lazy" />
-                      <span className="certification-issuer">{item.issuer}</span>
+            <div className="reveal" style={{ position: "relative" }}>
+              <div className="cert-slider" ref={certSliderRef} tabIndex="0" aria-label="Certifications slider">
+                {certifications.map((item, index) => (
+                  <article
+                    className="timeline-card certification-card interactive-lift pop-reveal"
+                    key={item.title}
+                    style={{ "--pop-delay": `${index * 0.08}s` }}
+                  >
+                    <div className="certification-card__meta" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", minHeight: "44px" }}>
+                      {item.logo ? (
+                        <div style={{ height: "40px", display: "flex", alignItems: "center" }}>
+                          <img src={item.logo} alt={item.issuer} style={{ maxWidth: "140px", maxHeight: "100%", objectFit: "contain", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))", transformOrigin: "left center" }} />
+                        </div>
+                      ) : (
+                        <span className="certification-issuer" style={{ fontSize: "14px", letterSpacing: "1px", textTransform: "uppercase", color: "var(--text)", lineHeight: 1, fontWeight: "600" }}>{item.issuer}</span>
+                      )}
+                      <span className="certification-date" style={{ fontSize: "12px", letterSpacing: "0.5px", textTransform: "uppercase", color: "var(--muted)", lineHeight: 1, whiteSpace: "nowrap" }}>{item.date}</span>
                     </div>
-                    <span className="certification-separator" aria-hidden="true"></span>
-                    <span className="certification-date">{item.date}</span>
-                  </div>
-                  <h3 className="certification-title">{item.title}</h3>
-                  <div className="certification-tags">
-                    {item.tags.map((tag) => <span className="training-tag" key={tag}>{tag}</span>)}
-                  </div>
-                  <button className="project-card__plus certification-card__plus" type="button" onClick={() => setSelectedCertificate(item)} aria-label={`Open certificate details for ${item.title}`}>+</button>
-                </article>
-              ))}
+                    <h3 className="certification-title">{item.title}</h3>
+                    <div className="certification-tags">
+                      {item.tags.map((tag) => <span className="training-tag" key={tag}>{tag}</span>)}
+                    </div>
+                    <button className="project-card__plus certification-card__plus" type="button" onClick={() => setSelectedCertificate(item)} aria-label={`Open certificate details for ${item.title}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                      </svg>
+                    </button>
+                  </article>
+                ))}
+              </div>
+              <div className="slider-controls slider-controls--bottom" aria-label="Certifications carousel controls" style={{ marginTop: "16px" }}>
+                <button className={`slider-control slider-control--circle ${!certCanScrollLeft ? "is-disabled" : ""}`} type="button" onClick={() => handleCertArrow(-1)} disabled={!certCanScrollLeft} aria-label="Previous certifications">&#8249;</button>
+                <button className={`slider-control slider-control--circle ${!certCanScrollRight ? "is-disabled" : ""}`} type="button" onClick={() => handleCertArrow(1)} disabled={!certCanScrollRight} aria-label="Next certifications">&#8250;</button>
+              </div>
             </div>
           </section>
 
@@ -965,29 +1086,43 @@ export default function App() {
             </div>
           </section>
 
-          <section className="contact section minimal-contact" id="contact">
-            <h2 className="contact-heading reveal">Get in Touch!</h2>
-            <div className="contact-minimal-list reveal pop-reveal">
-              <div className="contact-minimal-item">
-                <svg className="contact-minimal-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                <span>Mathura, Uttar Pradesh, IN</span>
+          <section className="contact section" id="contact">
+            <SectionHeading eyebrow="Contact Me" title="" />
+            <div className="contact-premium-card reveal" style={{ margin: "40px auto 0" }}>
+              <h2 className="contact-premium-title">Let's build something extraordinary.</h2>
+              <p className="contact-premium-desc">
+                Based in India, I am broadly open to discussing new projects, creative ideas, or opportunities to be part of your ambitious vision. Let's make an impact together.
+              </p>
+              <div className="contact-premium-links reveal pop-reveal" style={{ "--pop-delay": "0.15s" }}>
+                <a href="mailto:pathakkrishna281206@gmail.com" className="premium-link">
+                  <div className="premium-link-icon">📧</div>
+                  <div className="premium-link-text">
+                    <span>Email Me</span>
+                    <strong>pathakkrishna281206@gmail.com</strong>
+                  </div>
+                  <div className="premium-link-arrow">→</div>
+                </a>
+                <a href="tel:+918126833601" className="premium-link">
+                  <div className="premium-link-icon">📱</div>
+                  <div className="premium-link-text">
+                    <span>Call Me</span>
+                    <strong>+91 8126833601</strong>
+                  </div>
+                  <div className="premium-link-arrow">→</div>
+                </a>
+                <div className="premium-link" style={{ pointerEvents: "none" }}>
+                  <div className="premium-link-icon">📍</div>
+                  <div className="premium-link-text">
+                    <span>Location</span>
+                    <strong>Mathura, Uttar Pradesh, IN</strong>
+                  </div>
+                </div>
               </div>
-              <div className="contact-minimal-item">
-                <svg className="contact-minimal-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
-                <span>8126833601</span>
-              </div>
-              <div className="contact-minimal-item">
-                <svg className="contact-minimal-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-                <span>pathakkrishna281206@gmail.com</span>
-              </div>
-            </div>
-            <div className="contact-minimal-actions reveal pop-reveal" style={{ "--pop-delay": "0.3s" }}>
-              <a className="button button--primary" href="mailto:pathakkrishna281206@gmail.com">Send Message</a>
             </div>
           </section>
         </main>
         <footer className="site-footer reveal">
-          <p>© 2026 <span className="highlight-underline">Krishna Pathak</span>. All rights reserved.</p>
+          <p>© 2026 <a href="https://github.com/pathakkrishna/website" target="_blank" rel="noopener noreferrer" className="highlight-underline" style={{ color: "var(--text)" }}>Krishna Pathak</a>. All rights reserved.</p>
         </footer>
       </div>
       <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />

@@ -444,6 +444,7 @@ function SplashScreen({ onComplete }) {
             </span>
           ))}
         </button>
+        <p className={`splash-hint${btnFading ? " splash-hint--fade" : ""}`}>click to enter</p>
       </div>
       {/* Front canvas — dots rendered IN FRONT OF the button (pointer-events:none so button still works) */}
       <canvas ref={frontCanvasRef} className="splash-canvas splash-canvas--front" />
@@ -526,15 +527,19 @@ export default function App() {
 
   const handleSplashComplete = () => {
     setSplashDone(true);
+    document.body.classList.remove("splash-active");
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   };
 
   useEffect(() => {
+    if (!splashDone) {
+      document.body.classList.add("splash-active");
+    }
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     if (window.location.hash) {
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
     }
-  }, []);
+  }, [splashDone]);
 
   useEffect(() => {
     document.body.classList.toggle("light-theme", theme === "light");

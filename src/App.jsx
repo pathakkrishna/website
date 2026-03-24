@@ -274,6 +274,7 @@ function SplashScreen({ onComplete }) {
   const frontCanvasRef = useRef(null);
   const [btnFading, setBtnFading] = useState(false);
   const [exiting, setExiting]     = useState(false);
+
   const phaseRef      = useRef("idle"); // "idle" | "converging" | "done"
   const exitCalledRef = useRef(false);
 
@@ -838,7 +839,7 @@ export default function App() {
                   </a>
                 </div>
                 {/* CV download */}
-                <a className="button button--secondary hero-cv-btn" href="/assets/Krishna-Pathak-Resume.txt" download>
+                <a className="button button--secondary hero-cv-btn" href="/Krishna_Pathak_cv_.pdf" download>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="7 10 12 15 17 10"/>
@@ -855,7 +856,7 @@ export default function App() {
             <div className="about-layout">
               <figure className="about-portrait reveal pop-reveal" style={{ "--pop-delay": "0s" }}>
                 <div className="about-portrait__frame">
-                  <img src="/images/profile-placeholder.svg" alt="Portrait placeholder for Krishna Pathak" loading="lazy" />
+                  <img src="/images/krishna.jpeg" alt="Portrait of Krishna Pathak" loading="lazy" />
                 </div>
               </figure>
               <article className="about-copy content-card reveal pop-reveal" style={{ "--pop-delay": "0.08s" }}>

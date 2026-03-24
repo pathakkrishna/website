@@ -1,0 +1,2 @@
+// Move the image to the public/images directory for static serving
+// New image path: /images/about-photo.jpg
